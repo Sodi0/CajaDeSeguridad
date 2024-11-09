@@ -25,7 +25,7 @@ La caja fuerte cuenta con los siguientes componentes y funciones:
 -   **Fuente de energía adecuada** para el ESP8266 y el servo motor.
 
 ## Diagrama Circuito
-
+![circuito](circuito.jpg)
 
 ## Configuración del Proyecto
 1.  **Conectar el ESP8266** a tu red WiFi proporcionando los datos de SSID y contraseña en el código.
