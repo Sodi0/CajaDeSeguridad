@@ -19,6 +19,7 @@ const char* topic_estado = "ESP/Estado";
 
 // Pin del Servo y Ángulos
 #define SERVO_PIN D7
+#define BUZZER_PIN D4  
 const int ANGULO_CERRADO = 0;
 const int ANGULO_ABIERTO = 180;
 
@@ -30,7 +31,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 Servo servoMotor;
 
-// Función para configurar WiFi
+// Función para conectar a la red WiFi
 void setupWifi() {
     Serial.print("Conectando a WiFi...");
     WiFi.begin(ssid, password);
@@ -39,7 +40,6 @@ void setupWifi() {
         delay(500);
         Serial.print(".");
     }
-
     Serial.println("\nWiFi conectado. IP: ");
     Serial.println(WiFi.localIP());
 }
@@ -62,7 +62,7 @@ void reconnectMQTT() {
     }
 }
 
-// Publicar estado actual de la caja
+// Publica el estado actual de la caja fuerte en formato JSON
 void publicarEstado(const char* estado) {
     StaticJsonDocument<100> doc;
     doc["estado"] = estado;
@@ -71,38 +71,56 @@ void publicarEstado(const char* estado) {
     client.publish(topic_estado, estadoJson.c_str());
 }
 
-// Abrir y cerrar caja fuerte
+// Genera un sonido con el buzzer para indicar apertura
+void sonarBuzzerAbierto() {
+    for (int i = 0; i < 3; i++) {
+        digitalWrite(BUZZER_PIN, HIGH);
+        delay(100);
+        digitalWrite(BUZZER_PIN, LOW);
+        delay(200);
+    }
+}
+
+// Genera un sonido con el buzzer para indicar cierre
+void sonarBuzzerCerrado() {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(500);
+    digitalWrite(BUZZER_PIN, LOW);
+}
+
+// Abre la caja fuerte, mueve el servo y actualiza el estado
 void abrirCaja() {
     if (!estaAbierto) {
         servoMotor.write(ANGULO_ABIERTO);
         estaAbierto = true;
         Serial.println("Abriendo caja fuerte...");
+        sonarBuzzerAbierto();
         publicarEstado("ABIERTO");
     }
 }
 
+// Cierra la caja fuerte, mueve el servo y actualiza el estado
 void cerrarCaja() {
     if (estaAbierto) {
         servoMotor.write(ANGULO_CERRADO);
         estaAbierto = false;
         Serial.println("Cerrando caja fuerte...");
+        sonarBuzzerCerrado();
         publicarEstado("CERRADO");
     }
 }
 
-// Callback de mensajes MQTT
+// Callback de mensajes MQTT que procesa los comandos de apertura y cierre
 void callback(char* topic, byte* payload, unsigned int length) {
     String mensaje = "";
     for (int i = 0; i < length; i++) {
         mensaje += (char)payload[i];
     }
-
     Serial.print("Mensaje recibido [");
     Serial.print(topic);
     Serial.print("]: ");
     Serial.println(mensaje);
 
-    // Verificar si el mensaje es JSON antes de deserializar
     StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, mensaje);
     if (error) {
@@ -111,7 +129,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         return;
     }
 
-    // Procesar comandos de apertura o cierre
+    // Procesa el comando de apertura o cierre basado en el mensaje recibido
     if (strcmp(topic, topic_abierto) == 0 && doc["msg"] == "ABIERTO") {
         abrirCaja();
     } else if (strcmp(topic, topic_cerrado) == 0 && doc["msg"] == "CERRADO") {
@@ -119,6 +137,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 }
 
+// Configuración inicial del sistema
 void setup() {
     Serial.begin(115200);
     servoMotor.attach(SERVO_PIN);
@@ -128,8 +147,12 @@ void setup() {
     setupWifi();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(callback);
+
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, LOW);
 }
 
+// Bucle principal que mantiene la conexión MQTT y procesa mensajes
 void loop() {
     if (!client.connected()) {
         reconnectMQTT();
