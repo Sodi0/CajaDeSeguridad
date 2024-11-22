@@ -1,4 +1,3 @@
-
 # Proyecto Caja Fuerte Controlada por App Android
 
 Este proyecto consiste en una caja fuerte controlada mediante una aplicación Android en Java. La caja fuerte se abre y cierra de forma remota usando un sistema ESP8266 que se conecta a través de MQTT. Al recibir las órdenes de apertura o cierre desde la app, el sistema mueve un servo que controla el pestillo de la caja fuerte y emite sonidos con un buzzer para confirmar la operación.
@@ -25,7 +24,7 @@ La caja fuerte cuenta con los siguientes componentes y funciones:
 -   **Fuente de energía adecuada** para el ESP8266 y el servo motor.
 
 ## Diagrama Circuito
-![circuito](circuito.jpg)
+![circuito](circuito.png)
 
 ## Configuración del Proyecto
 1.  **Conectar el ESP8266** a tu red WiFi proporcionando los datos de SSID y contraseña en el código.
