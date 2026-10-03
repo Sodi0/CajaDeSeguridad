@@ -3,19 +3,7 @@
 #include <Servo.h>
 #include <ArduinoJson.h>
 
-// Configuración WiFi
-const char* ssid = "Nelly";
-const char* password = "nelly200";
-
-// Configuración MQTT
-const char* mqtt_server = "broker.emqx.io";
-const int mqtt_port = 1883;
-const char* mqtt_client_name = "CajaFuerte";
-
-// Topics MQTT
-const char* topic_abierto = "ESP/Abierto";
-const char* topic_cerrado = "ESP/Cerrado";
-const char* topic_estado = "ESP/Estado";
+#include "config.h"
 
 // Pin del Servo y Ángulos
 #define SERVO_PIN D7
@@ -34,7 +22,7 @@ Servo servoMotor;
 // Función para conectar a la red WiFi
 void setupWifi() {
     Serial.print("Conectando a WiFi...");
-    WiFi.begin(ssid, password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -48,10 +36,10 @@ void setupWifi() {
 void reconnectMQTT() {
     while (!client.connected()) {
         Serial.print("Conectando a MQTT...");
-        if (client.connect(mqtt_client_name)) {
+        if (client.connect(MQTT_CLIENT_NAME)) {
             Serial.println("Conectado a MQTT");
-            client.subscribe(topic_abierto);
-            client.subscribe(topic_cerrado);
+            client.subscribe(TOPIC_ABIERTO);
+            client.subscribe(TOPIC_CERRADO);
             publicarEstado(estaAbierto ? "ABIERTO" : "CERRADO");
         } else {
             Serial.print("Error, rc=");
@@ -68,7 +56,7 @@ void publicarEstado(const char* estado) {
     doc["estado"] = estado;
     String estadoJson;
     serializeJson(doc, estadoJson);
-    client.publish(topic_estado, estadoJson.c_str());
+    client.publish(TOPIC_ESTADO, estadoJson.c_str());
 }
 
 // Genera un sonido con el buzzer para indicar apertura
@@ -130,9 +118,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }
 
     // Procesa el comando de apertura o cierre basado en el mensaje recibido
-    if (strcmp(topic, topic_abierto) == 0 && doc["msg"] == "ABIERTO") {
+    if (strcmp(topic, TOPIC_ABIERTO) == 0 && doc["msg"] == "ABIERTO") {
         abrirCaja();
-    } else if (strcmp(topic, topic_cerrado) == 0 && doc["msg"] == "CERRADO") {
+    } else if (strcmp(topic, TOPIC_CERRADO) == 0 && doc["msg"] == "CERRADO") {
         cerrarCaja();
     }
 }
@@ -145,7 +133,7 @@ void setup() {
     estaAbierto = false;
 
     setupWifi();
-    client.setServer(mqtt_server, mqtt_port);
+    client.setServer(MQTT_SERVER, MQTT_PORT);
     client.setCallback(callback);
 
     pinMode(BUZZER_PIN, OUTPUT);

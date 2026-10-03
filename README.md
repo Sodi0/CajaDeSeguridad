@@ -1,88 +1,112 @@
-# Proyecto Caja Fuerte Controlada por App Android
+# Sistema IoT de Caja de Seguridad
 
-Este proyecto consiste en una caja fuerte controlada mediante una aplicación Android en Java. La caja fuerte se abre y cierra de forma remota usando un sistema ESP8266 que se conecta a través de MQTT. Al recibir las órdenes de apertura o cierre desde la app, el sistema mueve un servo que controla el pestillo de la caja fuerte y emite sonidos con un buzzer para confirmar la operación.
+> Sistema IoT de control y supervisión de una caja fuerte mediante una aplicación Android, MQTT, ESP8266 y Node-RED.
 
-## Descripción del Proyecto
+<p align="center">
+  <img src="https://img.shields.io/badge/Android-3DDC84.svg?style=for-the-badge&logo=android&logoColor=white" />
+  <img src="https://img.shields.io/badge/Java-ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/ESP8266-000000.svg?style=for-the-badge&logo=espressif&logoColor=white" />
+  <img src="https://img.shields.io/badge/MQTT-660066.svg?style=for-the-badge&logo=mqtt&logoColor=white" />
+  <img src="https://img.shields.io/badge/Node--RED-8F0000.svg?style=for-the-badge&logo=nodered&logoColor=white" />
+</p>
 
-La caja fuerte cuenta con los siguientes componentes y funciones:
+CajaDeSeguridad integra una aplicación Android, firmware para ESP8266, comunicación MQTT y un flujo Node-RED para controlar y supervisar una caja fuerte. El sistema permite enviar comandos de apertura y cierre, accionar el mecanismo mediante un servomotor y recibir el estado publicado por el microcontrolador.
 
--   **Conexión WiFi**: El ESP8266 se conecta a una red WiFi configurada en el código.
--   **Comunicación MQTT**: Las órdenes de apertura y cierre se envían y reciben a través de un servidor MQTT.
--   **Servo Motor**: Controla el ángulo de apertura y cierre de la caja fuerte.
--   **Buzzer**: Emite sonidos cortos al abrir y un sonido más largo al cerrar.
+Fue desarrollado en conjunto para una asignatura de Android e IoT. La variante de firmware con LCD añade visualización local del estado, mientras que Node-RED ofrece una interfaz alternativa de control y monitoreo.
 
-### Estructura de Archivos
+## Características
 
--   `ESP8266WiFi.h`, `PubSubClient.h`, `Servo.h`, `ArduinoJson.h`: Librerías necesarias para manejar WiFi, MQTT, el servo y el manejo de mensajes JSON.
--   Código para manejar la lógica de apertura y cierre basado en el estado de la caja fuerte.
+- Autenticación local mediante PIN.
+- Apertura y cierre mediante comandos MQTT.
+- Control desde una aplicación Android.
+- Recepción y visualización del estado de la caja.
+- Dashboard Node-RED como interfaz alternativa.
+- Accionamiento mediante servomotor.
+- Señalización mediante buzzer.
+- Visualización mediante LCD I2C en la variante correspondiente.
 
-## Hardware Necesario
-
--   **ESP8266**: Microcontrolador para la conexión WiFi y comunicación MQTT.
--   **Servo Motor**: Control del mecanismo de apertura y cierre de la caja fuerte.
--   **Buzzer**: Emisión de sonidos de confirmación.
--   **Fuente de energía adecuada** para el ESP8266 y el servo motor.
-
-## Diagrama Circuito
-![circuito](circuito.png)
-
-## Configuración del Proyecto
-1.  **Conectar el ESP8266** a tu red WiFi proporcionando los datos de SSID y contraseña en el código.
-2.  **Configurar el servidor MQTT**:
-    -   Usar un broker público como `broker.emqx.io` o configurar uno privado.
-    -   Configurar los tópicos MQTT para la comunicación de estado y control:
-        -   `ESP/Abierto`: Tópico de apertura.
-        -   `ESP/Cerrado`: Tópico de cierre.
-        -   `ESP/Estado`: Tópico para enviar el estado actual de la caja fuerte.
-3.  **Conectar el servo y el buzzer** a los pines definidos en el código:
-    -   `SERVO_PIN`: Pin digital conectado al servo.
-    -   `BUZZER_PIN`: Pin digital conectado al buzzer.
-
-## Instrucciones de Uso
-
-1.  **Cargar el código** en el ESP8266 y encender el dispositivo.
-2.  La **aplicación Android** debe conectarse al servidor MQTT y enviar comandos en formato JSON.
-    -   Comando para abrir: `{ "msg": "ABIERTO" }`
-    -   Comando para cerrar: `{ "msg": "CERRADO" }`
-3.  Al recibir los mensajes, el ESP8266 activará el servo y el buzzer en función del comando recibido.
-
-
-## Diagrama de Flujo
+## Arquitectura
 
 ```mermaid
 flowchart LR
-    %% Nodos principales
-    App[App Android] 
-    MQTT[MQTT Broker]
+    Android[Aplicación Android]
+    NodeRED[Node-RED Dashboard]
+    Broker[Broker MQTT<br/>broker.emqx.io:1883]
     ESP[ESP8266]
-    
-    %% Componentes del ESP8266
-    subgraph Hardware
-        ESP --> Servo[Servo Motor]
-        ESP --> Buzzer[Buzzer]
-    end
-    
-    %% Flujo de comunicación
-    App -->|Envía comando| MQTT
-    MQTT -->|Recibe comando| ESP
-    ESP -->|Publica estado| MQTT
-    MQTT -->|Actualiza estado| App
+    Servo[Servomotor]
+    Buzzer[Buzzer]
+    LCD[LCD I2C<br/>variante lcd-mqtt]
 
-    %% Estilos
-    classDef android fill:#a5d6a7,stroke:#000;
-    classDef broker fill:#90caf9,stroke:#000;
-    classDef esp fill:#ffcc80,stroke:#000;
-    classDef components fill:#b39ddb,stroke:#000;
-    
-    class App android;
-    class MQTT broker;
-    class ESP esp;
-    class Servo,Buzzer components;
+    Android -->|Comandos y estado| Broker
+    NodeRED -->|Comandos y estado| Broker
+    Broker -->|Comandos| ESP
+    ESP -->|Estado| Broker
+    ESP --> Servo
+    ESP --> Buzzer
+    ESP --> LCD
 ```
 
-## Bibliotecas Utilizadas
+MQTT actúa como capa de comunicación entre Android, Node-RED y el ESP8266. El microcontrolador procesa los comandos recibidos y publica los cambios de estado.
 
--   **ESP8266WiFi**: Para manejar la conexión WiFi.
--   **PubSubClient**: Para la comunicación MQTT.
--   **Servo**: Para controlar el movimiento del servo motor.
--   **ArduinoJson**: Para deserializar y serializar mensajes en formato JSON.
+[Ver arquitectura detallada →](docs/architecture.md)
+
+## Tecnologías
+
+| Componente | Tecnología | Aplicación |
+| --- | --- | --- |
+| Aplicación móvil | Android + Java | PIN local, comandos y estado |
+| Build Android | Gradle + Kotlin DSL | Configuración del proyecto |
+| Microcontrolador | ESP8266 + Arduino | Control del hardware |
+| MQTT en Android | Eclipse Paho | Publicación y suscripción |
+| MQTT en firmware | PubSubClient | Comandos y estados |
+| Automatización | Node-RED Dashboard | Control y monitoreo alternativos |
+| Display | LCD I2C | Visualización local del estado |
+
+## Estructura del repositorio
+
+```text
+CajaDeSeguridad/
+├── android/              # Aplicación Android
+├── firmware/
+│   ├── basic-mqtt/       # Firmware base
+│   └── lcd-mqtt/         # Firmware con LCD I2C
+├── node-red/             # Flujos Node-RED
+├── img/                  # Diagramas e imágenes
+├── docs/                 # Documentación técnica
+├── README.md
+└── .gitignore
+```
+
+## Aplicación Android
+
+La aplicación comienza con un acceso mediante PIN local y ofrece una pantalla principal con acciones para abrir y cerrar la caja. Publica el comando MQTT correspondiente y recibe el estado desde `ESP/Estado`.
+
+El proyecto Android se encuentra bajo `android/`. La compilación requiere un entorno con Android SDK configurado.
+
+## Comunicación MQTT
+
+Los componentes se comunican mediante MQTT utilizando `broker.emqx.io:1883`.
+
+Los tópicos principales son `ESP/Abierto`, `ESP/Cerrado` y `ESP/Estado`.
+
+[Ver comunicación MQTT →](docs/mqtt.md)
+
+## Configuración
+
+[Guía de configuración →](docs/setup.md)
+
+Las credenciales locales se mantienen fuera del repositorio. Para el firmware se proporciona una plantilla mediante [firmware/config-example.h](firmware/config-example.h).
+
+## Documentación
+
+- [Arquitectura](docs/architecture.md) — componentes y flujo general del sistema.
+- [Comunicación MQTT](docs/mqtt.md) — tópicos y flujo de mensajes.
+- [Configuración](docs/setup.md) — requisitos y puesta en marcha.
+- [Diagrama de circuito](img/circuito.png)
+- [Circuito LCD I2C](img/circuito_lcd_i2c.png)
+
+## Contexto
+
+Proyecto académico desarrollado en conjunto para una asignatura de Android e IoT.
+
+El repositorio se conserva como referencia técnica y portafolio del trabajo realizado.

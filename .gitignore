@@ -1,15 +1,43 @@
+# IDE / OS
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+Thumbs.db
+*.swp
+*.swo
+
+# Gradle / Android Studio
+.gradle/
 local.properties
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Arduino IDE build artifacts
+*.elf
+*.hex
+*.map
+*.eep
+*.lss
+*.sym
+
+# Configuration files
+config.h
+
+# Temporary files
+*.o
+*.elf
+*.bin
+
+# Configuration files
+config.h
+
+# Temporary files
+.o
+.elf
+.bin
