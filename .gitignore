@@ -1,0 +1,43 @@
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Gradle / Android Studio
+.gradle/
+local.properties
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Arduino IDE build artifacts
+*.elf
+*.hex
+*.map
+*.eep
+*.lss
+*.sym
+
+# Configuration files
+config.h
+
+# Temporary files
+*.o
+*.elf
+*.bin
+
+# Configuration files
+config.h
+
+# Temporary files
+.o
+.elf
+.bin
